@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f4e79">
+<meta name="description" content="ダイヤルゲージの測定値から電動機のシム代・左右移動代を計算する芯出しツール">
+<title>芯出し計算</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="芯出し計算">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="appbar">
+  <h1>芯出し計算 <span class="sub">ポンプ基準</span></h1>
+</header>
+
+<main>
+  <!-- ===== 計算 ===== -->
+  <section id="tab-calc" class="tab active">
+    <div class="card">
+      <h2>測定条件</h2>
+      <div class="row2">
+        <label>機器名<input id="name" type="text" placeholder="例：P-101"></label>
+        <label>測定日<input id="date" type="date"></label>
+      </div>
+      <div class="field">
+        <span class="label">ダイヤルゲージ取付側</span>
+        <div class="seg" id="mount">
+          <button type="button" data-v="motor" class="on">電動機側</button>
+          <button type="button" data-v="pump">ポンプ側</button>
+        </div>
+        <p class="hint" id="mount-hint"></p>
+      </div>
+      <svg class="dims" viewBox="0 0 340 92" aria-label="寸法D・Y・Xの位置">
+        <rect x="10" y="22" width="70" height="40" rx="4" class="d-pump"/>
+        <text x="45" y="47" class="d-txt">ポンプ</text>
+        <rect x="84" y="14" width="8" height="56" class="d-cpl"/>
+        <rect x="96" y="14" width="8" height="56" class="d-cpl"/>
+        <rect x="108" y="22" width="200" height="40" rx="4" class="d-motor"/>
+        <text x="225" y="47" class="d-txt">電動機</text>
+        <rect x="160" y="62" width="14" height="6" class="d-foot"/>
+        <rect x="290" y="62" width="14" height="6" class="d-foot"/>
+        <line x1="88" y1="42" x2="88" y2="14" class="d-dim"/>
+        <text x="72" y="12" class="d-lbl">D</text>
+        <line x1="100" y1="80" x2="167" y2="80" class="d-dim"/>
+        <line x1="167" y1="80" x2="297" y2="80" class="d-dim"/>
+        <line x1="100" y1="72" x2="100" y2="86" class="d-dim"/>
+        <line x1="167" y1="70" x2="167" y2="86" class="d-dim"/>
+        <line x1="297" y1="70" x2="297" y2="86" class="d-dim"/>
+        <text x="133" y="77" class="d-lbl">Y</text>
+        <text x="232" y="77" class="d-lbl">X</text>
+      </svg>
+      <div class="row3">
+        <label>D 測定径<span class="u">mm</span><input id="D" class="num" type="text" inputmode="decimal" placeholder="150"></label>
+        <label>Y<span class="u">mm</span><input id="Y" class="num" type="text" inputmode="decimal" placeholder="200"></label>
+        <label>X<span class="u">mm</span><input id="X" class="num" type="text" inputmode="decimal" placeholder="280"></label>
+      </div>
+      <p class="hint">D：測定点の径（カップリング外径）　Y：カップリング〜前脚　X：前脚〜後脚</p>
+    </div>
+
+    <div class="card">
+      <h2>測定値 <span class="sub">＋押込み／－離れる（mm）</span></h2>
+      <p class="hint">左右は<strong>電動機側からポンプを見た</strong>向きです。</p>
+      <div class="dials">
+        <div class="dial" data-group="rim">
+          <h3>芯ずれ（外周）</h3>
+          <div class="cross">
+            <div class="pos top"><span>上</span><div class="numwrap"><button type="button" class="pm">±</button><input data-k="top" class="num" type="text" inputmode="decimal" value="0"></div></div>
+            <div class="pos left"><span>左 (S3)</span><div class="numwrap"><button type="button" class="pm">±</button><input data-k="left" class="num" type="text" inputmode="decimal"></div></div>
+            <div class="circle"></div>
+            <div class="pos right"><span>右</span><div class="numwrap"><button type="button" class="pm">±</button><input data-k="right" class="num" type="text" inputmode="decimal"></div></div>
+            <div class="pos bottom"><span>下 (S1)</span><div class="numwrap"><button type="button" class="pm">±</button><input data-k="bottom" class="num" type="text" inputmode="decimal"></div></div>
+          </div>
+        </div>
+        <div class="dial" data-group="face">
+          <h3>面振れ（端面）</h3>
+          <div class="cross">
+            <div class="pos top"><span>上</span><div class="numwrap"><button type="button" class="pm">±</button><input data-k="top" class="num" type="text" inputmode="decimal" value="0"></div></div>
+            <div class="pos left"><span>左 (S4)</span><div class="numwrap"><button type="button" class="pm">±</button><input data-k="left" class="num" type="text" inputmode="decimal"></div></div>
+            <div class="circle"></div>
+            <div class="pos right"><span>右</span><div class="numwrap"><button type="button" class="pm">±</button><input data-k="right" class="num" type="text" inputmode="decimal"></div></div>
+            <div class="pos bottom"><span>下 (S2)</span><div class="numwrap"><button type="button" class="pm">±</button><input data-k="bottom" class="num" type="text" inputmode="decimal"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="result">
+      <h2>計算結果</h2>
+      <p class="empty" id="result-empty">D・Y・X と測定値を入力すると結果が表示されます。</p>
+      <div id="result-body" hidden>
+        <h3>上下（シム調整）</h3>
+        <div class="moves">
+          <div class="move"><span class="ml">カップリング側（前脚）</span><span class="mv" id="v-near"></span></div>
+          <div class="move"><span class="ml">反カップリング側（後脚）</span><span class="mv" id="v-far"></span></div>
+        </div>
+        <svg id="fig-side" class="fig" viewBox="0 0 360 170" aria-label="横から見た調整図"></svg>
+
+        <h3>左右（移動）</h3>
+        <div class="moves">
+          <div class="move"><span class="ml">カップリング側（前脚）</span><span class="mv" id="h-near"></span></div>
+          <div class="move"><span class="ml">反カップリング側（後脚）</span><span class="mv" id="h-far"></span></div>
+        </div>
+        <svg id="fig-top" class="fig" viewBox="0 0 360 300" aria-label="上から見た調整図"></svg>
+
+        <h3>現在の状態と判定</h3>
+        <table class="judge">
+          <thead><tr><th>項目</th><th>状態</th><th>判定</th></tr></thead>
+          <tbody id="judge-body"></tbody>
+        </table>
+        <div id="warnings"></div>
+        <p class="hint" id="svals"></p>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn primary" id="btn-save">記録に保存</button>
+        <button type="button" class="btn" id="btn-share">共有</button>
+        <button type="button" class="btn ghost" id="btn-clear">入力クリア</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 記録 ===== -->
+  <section id="tab-records" class="tab">
+    <div class="card">
+      <h2>測定記録</h2>
+      <p class="hint">記録はこの端末のブラウザ内に保存されます。機種変更前などはバックアップしてください。</p>
+      <ul id="record-list" class="records"></ul>
+      <p class="empty" id="records-empty">保存された記録はありません。</p>
+      <div class="actions">
+        <button type="button" class="btn" id="btn-csv">CSV出力</button>
+        <button type="button" class="btn" id="btn-backup">バックアップ</button>
+        <label class="btn">復元<input type="file" id="file-restore" accept="application/json,.json" hidden></label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 設定 ===== -->
+  <section id="tab-settings" class="tab">
+    <div class="card">
+      <h2>基準値</h2>
+      <p class="hint">初期値は取扱説明書の値（芯ずれ 0.5mm／1.00mm TIR、面振れ 1°）です。</p>
+      <div class="row3">
+        <label>芯ずれ許容<span class="u">mm</span><input id="tol-offset" class="num" type="text" inputmode="decimal"></label>
+        <label>面振れ許容<span class="u">°</span><input id="tol-angle" class="num" type="text" inputmode="decimal"></label>
+        <label>整合チェック<span class="u">mm</span><input id="tol-check" class="num" type="text" inputmode="decimal"></label>
+      </div>
+      <p class="hint">芯ずれは軸芯のずれ量（TIRの1/2）で判定します。整合チェックは「上＋下」と「左＋右」の差がこの値を超えると警告します。</p>
+      <button type="button" class="btn ghost" id="btn-tol-reset">初期値に戻す</button>
+    </div>
+    <div class="card">
+      <h2>計算方法</h2>
+      <ul class="notes">
+        <li>ポンプ基準（ポンプは動かさず、電動機を調整）。</li>
+        <li>読み値は ＋押込み／－離れる。上を0に合わせて測定。</li>
+        <li>S1＝芯ずれ(下−上)、S2＝面振れ(下−上)、S3＝芯ずれ(左−右)、S4＝面振れ(左−右)</li>
+        <li><b>電動機側に取付</b>：前脚＝S2/D×Y − S1/2、後脚＝S2/D×(Y+X) − S1/2</li>
+        <li><b>ポンプ側に取付</b>：前脚＝S2/D×Y ＋ S1/2、後脚＝S2/D×(Y+X) ＋ S1/2</li>
+        <li>左右は S4・S3 で同様に計算。</li>
+        <li>結果：上下 ＋上げる(シム追加)／－下げる(シム抜き)、左右 ＋右へ／－左へ</li>
+        <li>出典：関連資料－3「芯出し値の計算について」</li>
+      </ul>
+      <p class="hint">本ツールの結果は目安です。調整前に現場の状況（下げ代・ボルト穴の余裕など）を必ず確認してください。</p>
+      <p class="hint" id="version"></p>
+    </div>
+  </section>
+</main>
+
+<nav class="tabbar">
+  <button type="button" data-tab="calc" class="on"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5zM8 7h8M8 11h2M12 11h2M16 11h0M8 15h2M12 15h2M8 18h2M12 18h2"/></svg>計算</button>
+  <button type="button" data-tab="records"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM9 10h7M9 14h7M9 18h5"/></svg>記録</button>
+  <button type="button" data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>設定</button>
+</nav>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="calc.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

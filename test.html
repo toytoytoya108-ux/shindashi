@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>芯出し計算テスト</title>
+<style>body{font-family:sans-serif;padding:16px}.ok{color:green}.ng{color:red;font-weight:bold}</style>
+</head>
+<body>
+<h1>芯出し計算テスト</h1>
+<ul id="out"></ul>
+<script src="calc.js"></script>
+<script>
+  var out = document.getElementById('out');
+  var fails = 0;
+  function near(name, actual, expected, eps) {
+    var ok = Math.abs(actual - expected) <= (eps || 0.0005);
+    if (!ok) fails++;
+    var li = document.createElement('li');
+    li.className = ok ? 'ok' : 'ng';
+    li.textContent = (ok ? 'OK ' : 'NG ') + name + ': ' + actual.toFixed(4) + ' (期待値 ' + expected + ')';
+    out.appendChild(li);
+  }
+
+  // 資料の計算例（3月9日測定・電動機側取付）。面振れは「下開き＝下がマイナス」で入力
+  var base = {
+    mount: 'motor', D: 150, Y: 200, X: 280,
+    rim: { top: 0, bottom: -0.42, left: -0.32, right: -0.18 },
+    face: { top: 0, bottom: -0.52, left: -0.51, right: -0.08 }
+  };
+  var r = Shinde.calculate(base);
+  near('S1', r.S1, -0.42);
+  near('S2', r.S2, -0.52);
+  near('S3', r.S3, -0.14);
+  near('S4', r.S4, -0.43);
+  near('上下 カップリング側', r.vertical.near, -0.483);
+  near('上下 反カップリング側', r.vertical.far, -1.454);
+  near('左右 カップリング側', r.horizontal.near, -0.503);
+  near('左右 反カップリング側', r.horizontal.far, -1.306);
+  near('電動機の高さ(低い=-)', r.offsetV, -0.21);
+
+  // ポンプ側取付：芯ずれのみ符号反転
+  var p = Shinde.calculate(Object.assign({}, base, { mount: 'pump' }));
+  // S2/D×Y + S1/2
+  near('ポンプ側 上下 カップリング側', p.vertical.near, -0.52 / 150 * 200 + (-0.42 / 2));
+  near('ポンプ側 上下 反カップリング側', p.vertical.far, -0.52 / 150 * 480 + (-0.42 / 2));
+  near('ポンプ側 左右 カップリング側', p.horizontal.near, -0.43 / 150 * 200 + (-0.14 / 2));
+
+  // 純粋な平行ずれ：電動機側取付で電動機が0.2mm高い → 下が+0.4 → 0.2下げる
+  var o = Shinde.calculate({ mount: 'motor', D: 150, Y: 200, X: 280,
+    rim: { top: 0, bottom: 0.4, left: 0.2, right: 0.2 },
+    face: { top: 0, bottom: 0, left: 0, right: 0 } });
+  near('平行ずれ 前脚', o.vertical.near, -0.2);
+  near('平行ずれ 後脚', o.vertical.far, -0.2);
+
+  // 判定（基準：芯ずれ0.5mm、面振れ1°）
+  var ok = r.judge.offsetV && r.judge.offsetH && r.judge.angleV && r.judge.angleH;
+  near('基準値内判定', ok ? 1 : 0, 1);
+  near('面振れTIR基準(D=150,1°)', r.judge.faceTirLimit, 2.618);
+
+  var h = document.createElement('h2');
+  h.className = fails ? 'ng' : 'ok';
+  h.id = 'summary';
+  h.textContent = fails ? fails + ' 件失敗' : '全テスト合格';
+  document.body.appendChild(h);
+</script>
+</body>
+</html>
